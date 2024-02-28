@@ -1,55 +1,49 @@
 import pygame
-from PyGameComponents import core as pgcCore
+from PyGameComponents import core as pgclCore
+
+# GLOBAL VARIABLES
+WIN_WIDTH = 800
+WIN_HEIGHT = 600
+
+world = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1], [1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1], [1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1], [1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1], [1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1], [1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1], [1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1], [1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1], [1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1], [1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1], [1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1], [1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1], [1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1], [1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1], [1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1], [1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1], [1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1], [1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+
 
 def main():
-
-	pygame.init()
-
-	WIDTH = 1280
-	HEIGHT = 720
-
-	# Example usage in main.py:
-	font = pygame.font.Font(None, 32)
-	button = pgcCore.Button(0, 0, 150, 50, "Viva 42", (255, 0, 0), (200, 0, 0), (255, 255, 255), font)
-	checkbox = pgcCore.Checkbox(100, 100, 20, 2, (255, 255, 255), (150, 150, 150), (255, 255, 255))
-	text = pgcCore.Text("Hola Mundo", 32, (255, 255, 255), 150, 150)
-	textInput = pgcCore.TextInput(pgcCore.SET.center_width(WIDTH), pgcCore.SET.center_height(HEIGHT), 300, 250, 28, (220, 210, 140), (220, 215, 150), (255, 255, 255), 10)
-
-
-	screen = pygame.display.set_mode((WIDTH, HEIGHT))
-	pygame.display.set_caption("PyGame Component Library")
-
+	pygame.init() # Start a new game window
+	
+	# Settings
+	screen = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+	pygame.display.set_caption("PGCL Playground")
+	clock = pygame.time.Clock()
+ 
+	player_sprite = pygame.image.load("sprite.webp")
+	resized_sprite = pygame.transform.scale(player_sprite, (80, 80))
+	player = pgclCore.Player(100, 100, resized_sprite, resized_sprite.get_width(), resized_sprite.get_height(), screen, 150)
+	grid = pgclCore.Grid(50, WIN_WIDTH, WIN_HEIGHT, world)
+	# running
 	running = True
 	while running:
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				running = False
-			elif event.type == pygame.MOUSEBUTTONDOWN:
-				if button.is_clicked(pygame.mouse.get_pos()):
-					text.update_text("Hola Mundo")
-					new_x, new_y = pgcCore.SET.random_pos(WIDTH, HEIGHT)
-					print(f"New X: {new_x} \n New Y: {new_y}")
-					text.set_position(new_x, new_y)
-					text.draw(screen)
 			
-			
-			checkbox.handle_event(event)
-			textInput.handle_event(event)
-		
-		if button.is_clicked(pygame.mouse.get_pos()):
-			button.color = (200, 0, 0)
-		else:
-			button.color = (255, 0, 0)
-
-		screen.fill((0, 0, 0))
-
-		button.draw(screen)
-		checkbox.draw(screen)
-		text.draw(screen)
-		textInput.draw(screen)
+			if event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_ESCAPE:
+					pygame.quit()
+					running = False
+   
+		keys = pygame.key.get_pressed()
+		dt = clock.tick(60) / 1000
+		player.update(keys, dt)
+  
+		screen.fill((255, 255, 255))
+		grid.draw(screen)
+		if grid.check_collision(player):
+			player.dx = 0
+			player.dy = 0
+		player.draw(screen)
 
 		pygame.display.flip()
-
 	pygame.quit()
 
 if __name__ == "__main__":
