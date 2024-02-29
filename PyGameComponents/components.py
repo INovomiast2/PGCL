@@ -249,94 +249,160 @@ class Dropdown:
 		return self.options[self.selected_index]
 
 class Player:
-    def __init__(self, x, y, sprite, width, height, screen, speed=3):
-        self.x = x
-        self.y = y
-        self.original_sprite = sprite  # Store the original, unrotated sprite
-        self.sprite = sprite  
-        self.width = width
-        self.height = height
-        self.speed = speed
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        self.screen = screen
-        self.limit_w = screen.get_width() - self.width
-        self.limit_h = screen.get_height() - self.height
+	def __init__(self, x, y, sprite, width, height, screen, health=100, speed=3):
+		self.x = x
+		self.y = y
+		self.original_sprite = sprite  # Store the original, unrotated sprite
+		self.sprite = sprite  
+		self.width = width
+		self.height = height
+		self.speed = speed
+		self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+		self.screen = screen
+		self.health = health
+		self.limit_w = screen.get_width() - self.width
+		self.limit_h = screen.get_height() - self.height
 
-    def draw(self, screen):
-        screen.blit(self.sprite, (self.x, self.y))
+	def draw(self, screen):
+		screen.blit(self.sprite, (self.x, self.y))
 
-    def update(self, keys, dt):
-        dx = 0
-        dy = 0
+	def update(self, keys, dt):
+		dx = 0
+		dy = 0
 
-        if keys[pygame.K_LEFT]:
-            dx -= self.speed * dt
-            self.sprite = pygame.transform.rotate(self.original_sprite, 90)
-        elif keys[pygame.K_RIGHT]:
-            dx += self.speed * dt
-            self.sprite = pygame.transform.rotate(self.original_sprite, -90)
-        elif keys[pygame.K_UP]:
-            dy -= self.speed * dt
-            self.sprite = self.original_sprite  # Reset rotation
-        elif keys[pygame.K_DOWN]:
-            dy += self.speed * dt
-            self.sprite = pygame.transform.rotate(self.original_sprite, -180)
+		if keys[pygame.K_LEFT]:
+			dx -= self.speed * dt
+			self.sprite = pygame.transform.rotate(self.original_sprite, -90)
+		elif keys[pygame.K_RIGHT]:
+			dx += self.speed * dt
+			self.sprite = pygame.transform.rotate(self.original_sprite, -90)
+		elif keys[pygame.K_UP]:
+			dy -= self.speed * dt
+			self.sprite = pygame.transform.rotate(self.original_sprite, -90)
+		elif keys[pygame.K_DOWN]:
+			dy += self.speed * dt
+			self.sprite = pygame.transform.rotate(self.original_sprite, -90)
 
-        # Implement screen edge collision handling
-        self.x = max(0, min(self.x + dx, self.limit_w))
-        self.y = max(0, min(self.y + dy, self.limit_h))
+		# Implement screen edge collision handling
+		self.x = max(0, min(self.x + dx, self.limit_w))
+		self.y = max(0, min(self.y + dy, self.limit_h))
 
-        self.rect.x = self.x
-        self.rect.y = self.y
+		self.rect.x = self.x
+		self.rect.y = self.y
 
-    def check_collision(self, object):
-        return self.rect.colliderect(object.rect)
+	def check_collision(self, object):
+		return self.rect.colliderect(object.rect)
+	
+	def kill_player(self, health):
+		self.health = 0
+
+		
 
 	
 # Grid for the game
 
 class Grid:
-    def __init__(self, block_size, screen_width, screen_height, blocks_array):
-        self.block_size = block_size
-        self.screen_width = screen_width
-        self.screen_height = screen_height
-        self.blocks = blocks_array
+	def __init__(self, block_size, screen_width, screen_height, blocks_array):
+		self.block_size = block_size
+		self.screen_width = screen_width
+		self.screen_height = screen_height
+		self.blocks = blocks_array
 
-        # Calculate grid dimensions based on actual block_array size
-        self.num_cols = len(blocks_array[0])
-        self.num_rows = len(blocks_array)
+		# Calculate grid dimensions based on actual block_array size
+		self.num_cols = len(blocks_array[0])
+		self.num_rows = len(blocks_array)
 
-        # Create collision grid using boolean values based on block_array values
-        self.collision_grid = [[block >= 1 for block in row] for row in blocks_array]
+		# Create collision grid using boolean values based on block_array values
+		self.collision_grid = [[block >= 1 for block in row] for row in blocks_array]
 
-        # Create empty sprite groups
-        self.solid_blocks = pygame.sprite.Group()
-        self.platform_blocks = pygame.sprite.Group()
+		# Create empty sprite groups
+		self.solid_blocks = pygame.sprite.Group()
+		self.platform_blocks = pygame.sprite.Group()
 
-    def draw(self, screen):
-        for row in range(self.num_rows):
-            for col in range(self.num_cols):
-                block_type = self.blocks[row][col]
-                x = col * self.block_size
-                y = row * self.block_size
+	def draw(self, screen):
+		for row in range(self.num_rows):
+			for col in range(self.num_cols):
+				block_type = self.blocks[row][col]
+				x = col * self.block_size
+				y = row * self.block_size
 
-                if block_type >= 1:
-                    # Draw solid block
-                    block = pygame.sprite.Sprite()
-                    block.image = pygame.Surface((self.block_size, self.block_size))
-                    block.image.fill((0, 0, 0))  # Set block color
-                    block.rect = block.image.get_rect()
-                    block.rect.x = x
-                    block.rect.y = y
-                    self.solid_blocks.add(block)
-                    screen.blit(block.image, block.rect)
+				if block_type >= 1:
+					# Draw solid block
+					block = pygame.sprite.Sprite()
+					block.image = pygame.Surface((self.block_size, self.block_size))
+					block.image.fill((0, 0, 0))  # Set block color
+					block.rect = block.image.get_rect()
+					block.rect.x = x
+					block.rect.y = y
+					self.solid_blocks.add(block)
+					screen.blit(block.image, block.rect)
 
-                # No need for platform_blocks as both 1 and 0 represent solid blocks
+				# No need for platform_blocks as both 1 and 0 represent solid blocks
 
-    def check_collision(self, player):
-        # Check collision with all blocks (both solid and platform)
-        for block in self.solid_blocks:
-            if pygame.sprite.collide_rect(player, block):
-                return True
+	def check_collision(self, player):
+		# Check collision with all blocks (both solid and platform)
+		for block in self.solid_blocks:
+			if pygame.sprite.collide_rect(player, block):
+				return True
 
-        return False
+		return False
+	
+# Enemy Object
+class Enemy:
+	def __init__(self, x, y, width, height, health):
+		pass
+	
+	def draw(self, screen):
+		pass
+
+	def update(self, dt):
+		pass
+
+	def check_collision(self, player):
+		pass
+
+	def kill_enemy(self, enemy):
+		pass
+
+# Slider
+class Slider:
+	def __init__(self, x, y, width, height, min_value, max_value, color):
+		self.x = x
+		self.y = y
+		self.width = width
+		self.height = height
+		self.min_value = min_value
+		self.max_value = max_value
+		self.color = color
+
+		self.value = min_value
+		
+		self.thumb_size = 0.2 * self.width
+
+		self.bar_rect = pygame.Rect(self.x, self.y, self.width, self.height)
+
+		self.thumb_x = self.x + (self.value / (self.max_value - self.min_value))  * (self.width - self.thumb_size)
+
+	def draw(self, screen):
+		pygame.draw.rect(screen, self.color, self.bar_rect)
+
+		thumb_rect = pygame.Rect(self.thumb_x, self.y + self.height // 2 - self.thumb_size // 2, self.thumb_size, self.thumb_size)
+		pygame.draw.rect(screen, (0, 0, 0), thumb_rect)
+
+	def handle_event(self, event):
+		"""Handles mouse events to update the slider value."""
+		if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+			# Check if the mouse click is within the slider bar
+			if self.bar_rect.collidepoint(event.pos):
+				# Calculate the new slider value based on mouse click position
+				self.value = (event.pos[0] - self.x - self.thumb_size / 2) / (self.width - self.thumb_size) * (self.max_value - self.min_value) + self.min_value
+
+				# Clamp the value within the allowed range
+				self.value = max(self.min_value, min(self.value, self.max_value))
+
+				# Update the thumb position based on the new value
+				self.thumb_x = self.x + (self.value / (self.max_value - self.min_value)) * (self.width - self.thumb_size)
+
+	def get_value(self):
+		"""Returns the current value of the slider."""
+		return self.value
