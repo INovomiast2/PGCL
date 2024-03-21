@@ -249,7 +249,7 @@ class Dropdown:
 		return self.options[self.selected_index]
 
 class Player:
-	def __init__(self, x, y, sprite, width, height, screen, health=100, speed=3):
+	def __init__(self, x, y, sprite, width, height, screen, health=100, speed=100):
 		self.x = x
 		self.y = y
 		self.original_sprite = sprite  # Store the original, unrotated sprite
